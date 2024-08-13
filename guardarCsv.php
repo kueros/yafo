@@ -1,8 +1,6 @@
 <?php
 
-$apiKey = 'X0z2dBZYP@oBP!K8R*2)Ky_YKviVkC';
-$url = 'https://subdominioentidad.alephmanager.com/API/insert_cmdb/';
-$categoriaNombre = 'test api';
+$url = 'https://qa.alephmanager.com/API/insert_cmdb';
 $archivoCsv = 'reportes/ejemploEntradaRegistros.csv';
 
 if (($handle = fopen($archivoCsv, "r")) !== FALSE) {
@@ -14,35 +12,41 @@ if (($handle = fopen($archivoCsv, "r")) !== FALSE) {
 		$identificador = trim(str_replace('"', '', $data[0]));
 		$nombre = trim(str_replace('"', '', $data[1]));
 
-		$registros[] = array(
-			'Identificador' => $identificador,
-			'Nombre' => $nombre
-		);
+		$postDataArray = [
+			'categoria_id' => 60, // categoria "test api"
+			'identificador' => $identificador,
+			'nombre' => $nombre
+		];
+
+		$postData = http_build_query($postDataArray);
+		$api_key = 'X0z2dBZYP%40oBP!K8R*2)Ky_YKviVkC';
+
+		$postData = 'api_key=' . $api_key . "&" . $postData;
+
+		$curl = curl_init();
+
+		curl_setopt_array($curl, array(
+		CURLOPT_URL => $url,
+		CURLOPT_RETURNTRANSFER => true,
+		CURLOPT_ENCODING => '',
+		CURLOPT_MAXREDIRS => 10,
+		CURLOPT_TIMEOUT => 0,
+		CURLOPT_FOLLOWLOCATION => true,
+		CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+		CURLOPT_CUSTOMREQUEST => 'POST',
+		CURLOPT_POSTFIELDS => $postData,
+		CURLOPT_HTTPHEADER => array(
+			'Content-Type: application/x-www-form-urlencoded',
+			'Cookie: ci_session=ei1jhqvj6j292368vchqj9aj7js0trt5'
+		),
+		));
+
+		$response = curl_exec($curl);
+
+		curl_close($curl);
+		echo $response;
+
 	}
 	fclose($handle);
 
-	$postData = array(
-		'api_key' => $apiKey,
-		'categoria' => $categoriaNombre,
-		'registros' => $registros
-	);
-
-	$ch = curl_init($url);
-
-	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-	curl_setopt($ch, CURLOPT_POST, true);
-	curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postData));
-	curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-		'Content-Type: application/json'
-	));
-
-	$response = curl_exec($ch);
-
-	if ($response === false) {
-		echo 'Error en la solicitud: ' . curl_error($ch);
-	} else {
-		echo 'Respuesta de la API: ' . $response;
-	}
-
-	curl_close($ch);
 }
